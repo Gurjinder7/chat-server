@@ -1,10 +1,11 @@
 import type {Request, Response, NextFunction} from "express";
-import {verifyToken} from "../services/tokenService.ts";
+import {generateToken, verifyRefreshToken, verifyToken} from "../services/tokenService.ts";
 import {getUSerHash} from "../repository/userRepo.ts";
 
 export const validateToken = async (req: Request, res: Response, next: NextFunction) => {
     console.log(req.body)
     console.log('headers', req.headers);
+    console.log(req.cookies)
 
     const authToken = req.headers.authorization ?? null;
 
@@ -15,36 +16,63 @@ export const validateToken = async (req: Request, res: Response, next: NextFunct
         })
     }
 
-    let tokenData:string;
-    verifyToken(authToken.split(' ')[1]).then(res => {
-        console.log(res)
-        tokenData = res;
+    // try {
+        let tokenData, refreshTokenData:string;
 
-    }).catch(err => {
-        console.log(err)
-        return res.status(401).json({
-            status: "error",
-            message: "Invalid token",
-            error: err,
+        await verifyToken(authToken.split(' ')[1]).then(res => {
+            console.log('TokenData',res)
+            tokenData = res.data;
+        }).catch(e => {
+            console.error(e);
         })
-    })
 
-   try {
-        const userData = await getUSerHash(tokenData)
-        if (userData.rows) {
-            next()
+        if(!tokenData) {
+
+            await verifyRefreshToken(req.headers.cookie.split('=')[1]).then(res => {
+                console.log("RefreshToken",res.data)
+                refreshTokenData = res.data
+
+            }).catch(e => {
+                console.error(e);
+            })
+        }
+
+        console.log('tokenData',tokenData);
+        console.log('refreshTokenData',refreshTokenData);
+        if(!refreshTokenData && !tokenData) {
+            return res.status(401).json({
+                status: "error",
+                message: "Invalid token",
+            })
+        }
+
+
+        const username = tokenData ? tokenData : refreshTokenData;
+
+        const userData = await getUSerHash(username)
+       // console.log(userData)
+        if (userData.rowCount) {
+            if(tokenData) {
+                next()
+            } else {
+                return res.status(403).json({
+                    status: "Forbidden",
+                    authToken: await generateToken(username),
+                })
+            }
         } else {
             return res.status(401).json({
                 status: "error",
                 message: "Invalid token",
             })
         }
-   } catch (e) {
+
+   // } catch (e) {
        return res.status(500).json({
            status: "error",
-           message: e.message,
-           error: e,
+           message: "something went wrong",
+           // error: e,
        })
-   }
+   // }
 
 }

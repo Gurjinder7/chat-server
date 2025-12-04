@@ -1,9 +1,10 @@
 import type {Request, Response} from "express";
 import {comparePassword, generatePassword} from "../services/hashService.ts";
-import {generateToken} from "../services/tokenService.ts";
+import {generateRefreshToken, generateToken} from "../services/tokenService.ts";
 import {getUSerHash, saveUser} from "../repository/userRepo.ts";
 import {checkUserSchema, userSchema} from "../services/zodSchema.service.ts";
 import {ZodError} from "zod";
+
 
 const authController = {
     login : async (req: Request, res: Response) => {
@@ -18,12 +19,14 @@ const authController = {
 
         const user = await getUSerHash(username);
 
+        console.log('USER', user)
+
         if (!user) {
             return res.status(400).send("User or password is incorrect!");
         }
 
 
-        let token = null
+        let authToken, refreshToken: string = null
         // match hash and password
         try {
 
@@ -34,16 +37,24 @@ const authController = {
                 return res.status(400).send("Password is incorrect!");
             }
 
-            token = await generateToken(username);
+            authToken = await generateToken(username);
+            refreshToken = await generateRefreshToken(username);
 
-            console.log(token)
+            console.log(authToken)
         } catch (error) {
             console.log('ERROR',error);
             return res.status(400).send("Wrong username or password!");
         }
 
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+        });
+
         return res.status(200).json({
-            token: token
+            authToken,
+            refreshToken
         })
     },
     register :async (req: Request, res: Response) => {
