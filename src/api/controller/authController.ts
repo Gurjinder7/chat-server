@@ -2,18 +2,21 @@ import type {Request, Response} from "express";
 import {comparePassword, generatePassword} from "../services/hashService.ts";
 import {generateToken} from "../services/tokenService.ts";
 import {getUSerHash, saveUser} from "../repository/userRepo.ts";
+import {checkUserSchema, userSchema} from "../services/zodSchema.service.ts";
+import {ZodError} from "zod";
 
 const authController = {
     login : async (req: Request, res: Response) => {
         const { username, password } = req.body;
-        let user;
-        if (!username || !password) {
-            return res.status(400).send("Username and password");
-        } else {
-            // get user hash from the db
-            user = await getUSerHash(username);
-            console.log('user',user.rows)
+
+        const schemaCheck : userSchema | ZodError = checkUserSchema(req.body);
+
+        console.log(schemaCheck);
+        if(schemaCheck instanceof  ZodError){
+            return res.status(400).send(schemaCheck);
         }
+
+        const user = await getUSerHash(username);
 
         if (!user) {
             return res.status(400).send("User or password is incorrect!");
@@ -23,17 +26,15 @@ const authController = {
         let token = null
         // match hash and password
         try {
-            console.log(user.password);
-            console.log(user)
+
             const isTruePassword = await comparePassword(password, user?.rows[0]?.password);
-            console.log('isTruePassword',isTruePassword);
-            // const isTruePassword = null;
+
             // if match, generate a auth token
             if (!isTruePassword) {
                 return res.status(400).send("Password is incorrect!");
             }
 
-            token = await generateToken(password);
+            token = await generateToken(username);
 
             console.log(token)
         } catch (error) {

@@ -1,9 +1,11 @@
 import * as z from 'zod';
 
+type userSchema = z.infer<typeof  userSchema>
+
 const userSchema = z.object({
-    name:z.string(),
-    username:z.string(),
-    password:z.string(),
+    name:z.string().trim().min(1),
+    username:z.string().trim().min(3).regex(/^[a-zA-Z0-9_\-]+$/),
+    password:z.string().trim().min(6),
 })
 
 // export {userSchema};
@@ -27,4 +29,4 @@ const checkUserSchema = (input) => {
 
 }
 
-export { checkUserSchema };
+export { checkUserSchema, userSchema };
