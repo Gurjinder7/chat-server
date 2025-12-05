@@ -68,11 +68,12 @@ export const validateToken = async (req: Request, res: Response, next: NextFunct
         }
 
    // } catch (e) {
-       return res.status(500).json({
-           status: "error",
-           message: "something went wrong",
-           // error: e,
-       })
+    // NEEDS TO DO BETTER HANDLING OF ERRORS!
+    //    return res.status(500).json({
+    //        status: "error",
+    //        message: "something went wrong",
+    //        // error: e,
+    //    })
    // }
 
 }

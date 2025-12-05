@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 // import db from './db/index.ts'
 import {createDatabase} from "./db/migrations/createDatabase.ts";
 import api from './api/routes/routes.ts'
+import {createSocketConnection} from "./api/services/webSocket.service.ts";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -26,7 +27,7 @@ app.get("/contact", (req, res) => {
 })
 
 app.use("/api/", api);
-
+// createSocketConnection('ws://localhost:3000')
 
 app.listen(3000, () => {
     migrate().then(() => {

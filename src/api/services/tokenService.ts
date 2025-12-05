@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 
 export const generateToken = async (token: string) => {
-     return await jwt.sign({data: token}, process.env.JWT_SECRET,{expiresIn: "1m"});
+     return await jwt.sign({data: token}, process.env.JWT_SECRET,{expiresIn: "1h"});
 }
 
 export const generateRefreshToken = async (token: string) => {

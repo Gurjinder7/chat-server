@@ -2,15 +2,16 @@ import type {Request, Response} from "express";
 import {comparePassword, generatePassword} from "../services/hashService.ts";
 import {generateRefreshToken, generateToken} from "../services/tokenService.ts";
 import {getUSerHash, saveUser} from "../repository/userRepo.ts";
-import {checkUserSchema, userSchema} from "../services/zodSchema.service.ts";
+import {checkSchema, userSchema} from "../services/zodSchema.service.ts";
 import {ZodError} from "zod";
+import {USER} from "../../utils/constant.ts";
 
 
 const authController = {
     login : async (req: Request, res: Response) => {
         const { username, password } = req.body;
 
-        const schemaCheck : userSchema | ZodError = checkUserSchema(req.body);
+        const schemaCheck : userSchema | ZodError = checkSchema(req.body, USER);
 
         console.log(schemaCheck);
         if(schemaCheck instanceof  ZodError){

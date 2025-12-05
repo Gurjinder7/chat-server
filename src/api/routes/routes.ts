@@ -10,12 +10,7 @@ router.post("/register", controller.auth.register)
 
 
 // **** Protected routes ****
-router.get("/chats", mWare.validateToken, (req, res) => {
-    console.log(req.body)
-
-
-    res.status(200).send(req.body)
-})
+router.get("/chats", mWare.validateToken, controller.chat.getChat)
 // auth
 
 
